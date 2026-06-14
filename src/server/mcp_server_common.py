@@ -4,10 +4,9 @@ import mcp.types as types
 from mcp.server import NotificationOptions, Server
 import mcp.server.stdio
 
-# 初始化一个名为 "weather-service" 的 MCP 服务
-server = Server("weather-service")
+server = Server("mcp-common")
 
-# 1. 注册工具：告诉 Client 我们有什么工具，需要什么参数
+# 1. 注册工具
 @server.list_tools()
 async def handle_list_tools() -> list[types.Tool]:
     return [
@@ -24,7 +23,7 @@ async def handle_list_tools() -> list[types.Tool]:
         )
     ]
 
-# 2. 实现工具逻辑：当 Client 发起调用请求时，实际执行的代码
+# 2. 实现工具逻辑
 @server.call_tool()
 async def handle_call_tool(
     name: str, arguments: dict

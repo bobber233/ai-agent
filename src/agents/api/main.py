@@ -15,10 +15,5 @@ class ChatResponse(BaseModel):
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
-    if request.stream:
-        # returns an AsyncGenerator
-        generator = await run_agent(request.message, stream=True)
-        return StreamingResponse(generator, media_type="text/event-stream")
-    else:
-        reply = await run_agent(request.message, stream=False)
-        return ChatResponse(reply=reply if isinstance(reply, str) else '')
+    reply = run_agent(request.message)
+    return StreamingResponse(reply, media_type="text/event-stream")
