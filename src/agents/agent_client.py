@@ -5,7 +5,7 @@ import json
 import logging
 from pathlib import Path
 from contextlib import AsyncExitStack
-from typing import Any, cast, AsyncGenerator
+from typing import cast, AsyncGenerator
 from openai import AsyncOpenAI
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -52,14 +52,13 @@ Thought -> Action (Tool Calls) -> Observation -> Final Answer
 openai_client = AsyncOpenAI(base_url=settings.MODEL_BASE_URL, api_key="ollama")
 
 async def _call_mcp_tool(
-    tool_call: ChatCompletionMessageCustomToolCallParam,
+    tool_call,
     tool_to_session: dict[str, ClientSession],
 ) -> str:
     """Call an MCP tool with robust error handling and retries."""
     max_retries = 3
     for attempt in range(1, max_retries + 1):
         try:
-            tool_id = tool_call["id"]
             tool_name = tool_call["function"]["name"]
             tool_args_str = tool_call["function"]["arguments"]
             
@@ -108,7 +107,7 @@ def _prepare_mcp_and_messages() -> dict[str, StdioServerParameters]:
             file.startswith("mcp_server")
             and file_path.suffix == ".py"
         ):
-            server_name = file_path.stem.replace("mcp_server", "")
+            server_name = file_path.stem
             server_path = os.path.join(server_dir, file)
             server_configs[server_name] = StdioServerParameters(
                 command=sys.executable,
@@ -138,7 +137,7 @@ async def initialize_all_servers(
             read_channel, write_channel = await stack.enter_async_context(stdio_client(server_params))
             server_session = await stack.enter_async_context(ClientSession(read_channel, write_channel))
             await server_session.initialize()
-            logger.info(f"  ├─ [连接成功]: 服务 {server_name}")
+            logger.info(f"  ├─ [连接成功]: MCP服务 {server_name}")
             mcp_tools = await server_session.list_tools()
             for tool in mcp_tools.tools:
                 tool_to_session[tool.name] = server_session
@@ -207,7 +206,7 @@ async def run_agent(
                         if tc.id:
                             calls_buffer[idx]["id"] = tc.id
                         if tc.function and tc.function.name:
-                            yield f"\n[Agent 状态]: 准备执行 -> 【{tc.function.name}】...\n"
+                            yield f"\n准备执行 -> 【{tc.function.name}】...\n"
                             calls_buffer[idx]["name"] = tc.function.name
                         if tc.function and tc.function.arguments:
                             calls_buffer[idx]["arguments"] += tc.function.arguments
@@ -233,9 +232,9 @@ async def run_agent(
                 for tool_call in tool_calls:
                     tool_id = tool_call["id"]
                     tool_name = tool_call["function"]["name"]
-                    yield f"[Agent 状态]: 正在执行【{tool_name}】，请稍候...\n"
+                    yield f"正在执行【{tool_name}】，请稍候...\n"
                     execution_result = await _call_mcp_tool(tool_call, tool_to_session)
-                    yield f"[Agent 状态]: 【{tool_name}】执行完毕。正在读入观测数据...\n"
+                    yield f"【{tool_name}】执行完毕。正在读入观测数据...\n"
                     # 按照 OpenAI 严格的标准，将执行结果包装成 tool 角色塞回上下文中
                     tool_message: ChatCompletionToolMessageParam = {
                         "role": "tool",
