@@ -19,8 +19,6 @@ from mcp.types import (
 )
 from pydantic import BaseModel, Field
 
-logger = logging.getLogger("uvicorn.error")
-
 class SearchSchema(BaseModel):
     """DuckDuckGo 搜索参数校验模型"""
     query: Annotated[
@@ -151,7 +149,6 @@ async def serve() -> None:
 
     options = server.create_initialization_options()
     async with stdio_server() as (read_stream, write_stream):
-        logger.info("DuckDuckGo MCP 运行环境已就绪 (Transport: stdio)")
         await server.run(read_stream, write_stream, options, raise_exceptions=False)
 
 async def main():

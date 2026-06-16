@@ -19,6 +19,8 @@ markdownify = "^1.2.2"
 readabilipy = "^0.3.0"
 protego = "^0.6.1"
 ddgs = "^9.14.4"
+sentence-transformers = "^5.6.0"
+chromadb = "^1.5.9"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
