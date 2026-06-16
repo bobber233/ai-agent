@@ -1,6 +1,6 @@
-.venv/
+.venv
 .env
-__pycache__/
-.vscode/
+__pycache__
+.vscode
 .continue
 .DS_Store
