@@ -12,6 +12,8 @@ from openai.types.chat import (
 from src.agents.core.config import settings
 from src.utils.logger import logger
 from src.mcp_server.mcp_manager import call_mcp_tool
+from src.utils.intent_router import intent_router
+from src.mcp_server.mcp_server_knowledge import _blocking_vector_search
 
 openai_client = AsyncOpenAI(base_url=settings.MODEL_BASE_URL, api_key="ollama")
 

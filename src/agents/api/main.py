@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import asyncio
 from typing import Optional
 from pydantic import BaseModel
 from contextlib import AsyncExitStack, asynccontextmanager
@@ -27,6 +28,7 @@ async def lifespan(_: FastAPI):
     
     # 关闭时清理资源
     await state.stack.aclose()
+    await asyncio.sleep(3)  # 给底层资源最后 0.1 秒的喘息时间来彻底销毁
     logger.info("  ├─ [服务关闭]: MCP 服务器已关闭，资源已清理。")
 
 app = FastAPI(title="AI Agent API", lifespan=lifespan)

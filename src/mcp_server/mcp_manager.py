@@ -10,6 +10,12 @@ from mcp.types import TextContent
 from openai.types.chat import (
     ChatCompletionToolParam,
 )
+project_root = os.getcwd() 
+
+# 核心：复制当前系统的环境变量，并追加 PYTHONPATH
+current_env = os.environ.copy()
+# 将根目录加到 PYTHONPATH 中，确保子进程能找到 src 目录
+current_env["PYTHONPATH"] = project_root + os.path.pathsep + current_env.get("PYTHONPATH", "")
 from src.utils.logger import logger
 
 def _prepare_mcp_and_messages() -> dict[str, StdioServerParameters]:
@@ -34,6 +40,7 @@ def _prepare_mcp_and_messages() -> dict[str, StdioServerParameters]:
             server_path = os.path.join(server_dir, file)
             server_configs[server_name] = StdioServerParameters(
                 command=sys.executable,
+                env=current_env,
                 args=[server_path]
             )
 
