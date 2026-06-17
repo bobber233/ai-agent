@@ -3,13 +3,14 @@ from pydantic import BaseModel, Field
 from openai import AsyncOpenAI
 from src.agents.core.config import settings
 from src.utils.logger import logger
+from src.agents.core.config import settings
 
 # 1. 定义路由分类的结构化 Schema
 class RoutingDecision(BaseModel):
     """大模型意图路由分类决策"""
     intent: Literal["knowledge_base", "general_chat", "other_tools"] = Field(
         description="判断用户的请求应该路由到哪里：\n"
-                    "- 'knowledge_base': 涉及公司业务、内部政策、专属技术文档、产品手册等专有背景知识。\n"
+                    "- 'knowledge_base': 涉及公司内部业务、政策、专属技术文档、产品手册等专有背景知识。\n"
                     "- 'general_chat': 日常打招呼、闲聊、通用常识问答、简单数学计算。\n"
                     "- 'other_tools': 明确要求使用其他外部工具（如搜索、天气等）。"
     )
@@ -17,8 +18,8 @@ class RoutingDecision(BaseModel):
 
 class IntentRouter:
     def __init__(self):
-        self.client = AsyncOpenAI(base_url=settings.MODEL_BASE_URL, api_key="ollama")
-        self.router_model = "qwen2.5:1.5b"
+        self.client = AsyncOpenAI(base_url=settings.MODEL_BASE_URL, api_key=settings.API_KEY)
+        self.router_model = settings.INDENT_MODEL_NAME
 
     async def route_intent(self, user_message: str) -> str:
         """ 分析用户消息意图，返回路由决策：'knowledge_base'、'general_chat' 或 'other_tools'

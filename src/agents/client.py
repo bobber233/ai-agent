@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import AsyncExitStack
 from typing import AsyncGenerator
 from openai import AsyncOpenAI
@@ -11,11 +12,11 @@ from openai.types.chat import (
 )
 from src.agents.core.config import settings
 from src.utils.logger import logger
-from src.mcp_server.mcp_manager import call_mcp_tool
-from src.utils.intent_router import intent_router
-from src.mcp_server.mcp_server_knowledge import _blocking_vector_search
+from src.server.manager import call_mcp_tool
+from src.agents.router.intent import intent_router
+from src.server.mcp_server_knowledge import _blocking_vector_search
 
-openai_client = AsyncOpenAI(base_url=settings.MODEL_BASE_URL, api_key="ollama")
+openai_client = AsyncOpenAI(base_url=settings.MODEL_BASE_URL, api_key=settings.API_KEY)
 
 async def consume_and_parse(response):
     """ 消费模型的流式输出，动态解析文本内容和工具调用指令，并以增量方式 yield 给前端
@@ -99,6 +100,25 @@ async def run_agent(
     Yields:
         str: 每次模型输出的增量文本或工具调用状态更新
     """
+    yield "[系统提示]: 正在分析您的请求意图...\n"
+    intent = await intent_router.route_intent(user_message)
+    if intent == "knowledge_base":
+        yield "[系统提示]: 检测到业务专属咨询，正在检索本地向量知识库...\n"
+        
+        # 将同步阻塞的向量数据库请求通过 to_thread 交给线程池，防止挂起 Fastapi 流式
+        knowledge_context = await asyncio.to_thread(
+            _blocking_vector_search, query=user_message, top_k=3
+        )
+        
+        # 动态组装背景注入
+        system_prompt = (
+            f"{system_prompt}\n\n"
+            f"【参考知识库内容】:\n{knowledge_context}\n"
+            f"请优先结合上述参考知识库内容回答用户的问题。"
+        )
+        logger.info("意图契合，前置知识成功注入。")
+    else:
+        logger.info(f"意图为 {intent}，跳过知识库检索，避免上下文污染。")
     messages: list[ChatCompletionMessageParam] = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_message}

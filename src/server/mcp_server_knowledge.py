@@ -17,12 +17,13 @@ from mcp.types import (
 )
 from src.utils.logger import logger
 
+COLLECTION_NAME = "knowledge_base"
+CHROMA_DATA_PATH = "src/data/chroma_db"
 MODEL_NAME = "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
-encoder = SentenceTransformer(MODEL_NAME)
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "../data/vector_db")
-chroma_client = chromadb.PersistentClient(path=DB_PATH)
-collection = chroma_client.get_or_create_collection(name="agent_knowledge")
+embedding_model = SentenceTransformer(MODEL_NAME)
+chroma_client = chromadb.PersistentClient(path=CHROMA_DATA_PATH)
+collection = chroma_client.get_or_create_collection(name=COLLECTION_NAME)
 
 class KnowledgeQuerySchema(BaseModel):
     """知识库检索参数校验模型"""
@@ -44,7 +45,7 @@ async def handle_list_tools() -> list[Tool]:
         Tool(
             name="query_knowledge_base",
             description=(
-                "当用户询问关于内部政策、专属技术文档、产品说明或未知的背景知识时"
+                "当用户询问关于公司内部政策、专属技术文档、产品说明或未知的背景知识时"
                 "调用此工具从向量知识库中检索相关的匹配片段。"
             ),
             inputSchema=KnowledgeQuerySchema.model_json_schema()
@@ -54,7 +55,7 @@ async def handle_list_tools() -> list[Tool]:
 def _blocking_vector_search(query: str, top_k: int) -> str:
     """内部同步阻塞的语义向量生成与向量库查询核心逻辑"""
     try:
-        query_vector = encoder.encode(query).tolist()
+        query_vector = embedding_model.encode(query).tolist()
         
         results = collection.query(
             query_embeddings=[query_vector],

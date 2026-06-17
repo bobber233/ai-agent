@@ -25,7 +25,7 @@ def _prepare_mcp_and_messages() -> dict[str, StdioServerParameters]:
         dict: MCP 服务名到启动参数的映射表
     """
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    server_dir = os.path.normpath(os.path.join(current_dir, "..", "mcp_server"))
+    server_dir = os.path.normpath(os.path.join(current_dir, "..", "server"))
     server_configs: dict[str, StdioServerParameters] = {}
     if not os.path.exists(server_dir):
         logger.info(f"错误: 找不到指定的 server 目录路径 -> {server_dir}")

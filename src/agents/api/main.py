@@ -8,7 +8,7 @@ from functools import lru_cache
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from src.agents.client import run_agent
-from src.mcp_server.mcp_manager import initialize_all_servers
+from src.server.manager import initialize_all_servers
 from src.utils.logger import logger
 
 class AppState:
