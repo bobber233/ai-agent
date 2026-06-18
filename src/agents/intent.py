@@ -3,7 +3,6 @@ from pydantic import BaseModel, Field
 from openai import AsyncOpenAI
 from src.agents.core.config import settings
 from src.utils.logger import logger
-from src.agents.core.config import settings
 
 # 1. 定义路由分类的结构化 Schema
 class RoutingDecision(BaseModel):
